@@ -8,6 +8,8 @@ import '../providers/auth_provider.dart';
 import '../providers/ride_provider.dart';
 import '../widgets/dynamic_map_view.dart';
 import 'settings_screen.dart';
+import 'earnings_screen.dart';
+import 'chat_screen.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -119,8 +121,111 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
     await ref.read(authProvider.notifier).logout();
   }
 
+  Future<void> _sendSos(int rideId) async {
+    try {
+      await ref.read(rideProvider.notifier).sendSos(rideId, _lat, _lng);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('SOS Alert sent! Help is on the way.'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
+  void _showRatingDialog(int rideId) {
+    int stars = 5;
+    final commentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Rate Customer'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('How was the rider?'),
+              const SizedBox(height: 16),
+              StatefulBuilder(builder: (context, setDialogState) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      icon: Icon(
+                        index < stars ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 32,
+                      ),
+                      onPressed: () {
+                        setDialogState(() => stars = index + 1);
+                      },
+                    );
+                  }),
+                );
+              }),
+              TextField(
+                controller: commentController,
+                decoration: const InputDecoration(
+                  hintText: 'Leave a comment (optional)',
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                ref.read(rideProvider.notifier).clear();
+              },
+              child: const Text('Skip'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await ref.read(rideProvider.notifier).rateRide(
+                        rideId,
+                        stars,
+                        commentController.text.trim(),
+                      );
+                  if (mounted) Navigator.pop(ctx);
+                  ref.read(rideProvider.notifier).clear();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Thanks for rating!')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString())),
+                    );
+                  }
+                }
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<RideState>(rideProvider, (previous, next) {
+      final prevStatus = previous?.ride?['status'];
+      final nextStatus = next.ride?['status'];
+      if (prevStatus != 'completed' && nextStatus == 'completed') {
+        final rideId = next.ride!['id'];
+        _showRatingDialog(rideId);
+      }
+    });
     final auth = ref.watch(authProvider);
     final rideState = ref.watch(rideProvider);
     final isOnline = auth.user?['is_online'] == true;
@@ -143,6 +248,13 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
             ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.account_balance_wallet),
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const EarningsScreen()));
+            },
           ),
           IconButton(
             icon: const Icon(Icons.settings),
@@ -251,6 +363,33 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                     ],
                   ),
                 ),
+              ),
+            ),
+          if (isOnline && ride != null)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Column(
+                children: [
+                  FloatingActionButton(
+                    mini: true,
+                    heroTag: 'chat_driver',
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
+                    },
+                    child: Icon(Icons.chat,
+                        color: Theme.of(context).colorScheme.onPrimary),
+                  ),
+                  const SizedBox(height: 8),
+                  FloatingActionButton(
+                    mini: true,
+                    heroTag: 'sos_driver',
+                    backgroundColor: Colors.red,
+                    onPressed: () => _sendSos(ride['id'] as int),
+                    child: const Icon(Icons.emergency, color: Colors.white),
+                  ),
+                ],
               ),
             ),
         ],
