@@ -741,6 +741,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
                 ),
               ),
             ),
+          ),
 
           // ── Active ride panel ─────────────────────────────────────
           if (isOnline && ride != null)
@@ -869,6 +870,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
                             status == 'started')
                           _buildActionButton(
                               'Cancel', 'cancelled', AppColors.error),
+                      ],
+                    ),
                   ],
                 ),
               ),
