@@ -39,11 +39,8 @@ class PairrideDriverApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Inter',
         scaffoldBackgroundColor: AppColors.surfaceLight,
-        cardTheme: CardThemeData(
+        cardTheme: const CardTheme(
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
           color: AppColors.cardLight,
         ),
         appBarTheme: const AppBarTheme(
@@ -117,11 +114,8 @@ class PairrideDriverApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Inter',
         scaffoldBackgroundColor: AppColors.surfaceDark,
-        cardTheme: CardThemeData(
+        cardTheme: const CardTheme(
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
           color: AppColors.cardDark,
         ),
         appBarTheme: const AppBarTheme(

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:glassmorphism/glassmorphism.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../providers/auth_provider.dart';
 import '../providers/ride_provider.dart';
 import '../utils/app_theme.dart';
@@ -11,6 +14,7 @@ import '../widgets/dynamic_map_view.dart';
 import 'settings_screen.dart';
 import 'earnings_screen.dart';
 import 'chat_screen.dart';
+import 'history_screen.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -363,6 +367,15 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
                   const Spacer(),
                   // Action buttons
                   _buildTopButton(
+                    icon: Icons.history_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const HistoryScreen()),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildTopButton(
                     icon: Icons.account_balance_wallet_outlined,
                     onTap: () => Navigator.push(
                       context,
@@ -530,24 +543,36 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(28)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
-                    ),
+              child: GlassmorphicContainer(
+                width: MediaQuery.of(context).size.width,
+                height: 400,
+                borderRadius: 28,
+                blur: 20,
+                alignment: Alignment.bottomCenter,
+                border: 1,
+                linearGradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.9),
+                      Colors.white.withOpacity(0.8),
+                    ],
+                    stops: const [0.1, 1],
+                ),
+                borderGradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.5),
+                    Colors.white.withOpacity(0.2),
                   ],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     // Handle
                     Center(
                       child: Container(
@@ -568,7 +593,9 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ...available.take(3).map((r) {
+                    ...available.take(3).toList().asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final r = entry.value;
                       final rideServiceType =
                           (r['service_type'] as String?) ?? 'single';
                       final stColor = serviceTypeColor(rideServiceType);
@@ -708,8 +735,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
                             ),
                           ],
                         ),
-                      );
-                    }),
+                      ).animate().fade().scale(delay: (index * 100).ms, curve: Curves.easeOutBack);
+                    }).toList(),
                   ],
                 ),
               ),
@@ -721,24 +748,36 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(28)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
-                    ),
+              child: GlassmorphicContainer(
+                width: MediaQuery.of(context).size.width,
+                height: 350,
+                borderRadius: 28,
+                blur: 20,
+                alignment: Alignment.bottomCenter,
+                border: 1,
+                linearGradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.9),
+                      Colors.white.withOpacity(0.8),
+                    ],
+                    stops: const [0.1, 1],
+                ),
+                borderGradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.5),
+                    Colors.white.withOpacity(0.2),
                   ],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     // Handle
                     Center(
                       child: Container(
@@ -830,12 +869,11 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
                             status == 'started')
                           _buildActionButton(
                               'Cancel', 'cancelled', AppColors.error),
-                      ],
-                    ),
                   ],
                 ),
               ),
             ),
+          ).animate().slideY(begin: 1.0, end: 0, duration: 500.ms, curve: Curves.easeOutCubic),
         ],
       ),
     );

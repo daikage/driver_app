@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 class RideState {
   final Map<String, dynamic>? ride;
   final List<Map<String, dynamic>> availableRides;
+  final List<Map<String, dynamic>> history;
   final List<Map<String, dynamic>> messages;
   final String? serviceTypeFilter; // null = show all
   final bool loading;
@@ -13,6 +14,7 @@ class RideState {
   const RideState({
     this.ride,
     this.availableRides = const [],
+    this.history = const [],
     this.messages = const [],
     this.serviceTypeFilter,
     this.loading = false,
@@ -22,6 +24,7 @@ class RideState {
   RideState copyWith({
     Map<String, dynamic>? ride,
     List<Map<String, dynamic>>? availableRides,
+    List<Map<String, dynamic>>? history,
     List<Map<String, dynamic>>? messages,
     String? serviceTypeFilter,
     bool? loading,
@@ -33,6 +36,7 @@ class RideState {
     return RideState(
       ride: clearRide ? null : (ride ?? this.ride),
       availableRides: availableRides ?? this.availableRides,
+      history: history ?? this.history,
       messages: messages ?? this.messages,
       serviceTypeFilter: clearFilter ? null : (serviceTypeFilter ?? this.serviceTypeFilter),
       loading: loading ?? this.loading,
@@ -140,6 +144,19 @@ class RideNotifier extends StateNotifier<RideState> {
       state = state.copyWith(availableRides: rides);
     } on Exception {
       // Keep the current state if the request fails.
+    }
+  }
+
+  Future<void> fetchHistory() async {
+    state = state.copyWith(loading: true, clearError: true);
+    try {
+      final response = await ApiService.instance.dio.get('/rides/history');
+      final rides = (response.data['rides']['data'] as List)
+          .map((r) => (r as Map).cast<String, dynamic>())
+          .toList();
+      state = state.copyWith(history: rides, loading: false);
+    } on Exception catch (e) {
+      state = state.copyWith(loading: false, error: ApiService.friendlyError(e));
     }
   }
 
