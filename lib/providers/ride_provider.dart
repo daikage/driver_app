@@ -6,6 +6,7 @@ class RideState {
   final Map<String, dynamic>? ride;
   final List<Map<String, dynamic>> availableRides;
   final List<Map<String, dynamic>> messages;
+  final String? serviceTypeFilter; // null = show all
   final bool loading;
   final String? error;
 
@@ -13,6 +14,7 @@ class RideState {
     this.ride,
     this.availableRides = const [],
     this.messages = const [],
+    this.serviceTypeFilter,
     this.loading = false,
     this.error,
   });
@@ -21,14 +23,18 @@ class RideState {
     Map<String, dynamic>? ride,
     List<Map<String, dynamic>>? availableRides,
     List<Map<String, dynamic>>? messages,
+    String? serviceTypeFilter,
     bool? loading,
     String? error,
     bool clearError = false,
+    bool clearRide = false,
+    bool clearFilter = false,
   }) {
     return RideState(
-      ride: ride ?? this.ride,
+      ride: clearRide ? null : (ride ?? this.ride),
       availableRides: availableRides ?? this.availableRides,
       messages: messages ?? this.messages,
+      serviceTypeFilter: clearFilter ? null : (serviceTypeFilter ?? this.serviceTypeFilter),
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
     );
@@ -37,6 +43,14 @@ class RideState {
 
 class RideNotifier extends StateNotifier<RideState> {
   RideNotifier() : super(const RideState());
+
+  void setServiceTypeFilter(String? type) {
+    state = state.copyWith(
+      serviceTypeFilter: type,
+      clearFilter: type == null,
+    );
+    fetchAvailable(serviceType: type);
+  }
 
   Future<void> requestRide({
     required double pickupLat,
@@ -104,19 +118,22 @@ class RideNotifier extends StateNotifier<RideState> {
       final response = await ApiService.instance.dio.get('/rides/active');
       final raw = response.data['ride'];
       if (raw == null) {
-        state = const RideState();
+        state = state.copyWith(clearRide: true);
         return;
       }
-      state = RideState(ride: (raw as Map).cast<String, dynamic>());
+      state = state.copyWith(ride: (raw as Map).cast<String, dynamic>());
     } on Exception {
       // Keep the current state if the request fails.
     }
   }
 
-  Future<void> fetchAvailable() async {
+  Future<void> fetchAvailable({String? serviceType}) async {
     if (state.loading) return;
     try {
-      final response = await ApiService.instance.dio.get('/rides/available');
+      final params = <String, dynamic>{};
+      if (serviceType != null) params['service_type'] = serviceType;
+      final response = await ApiService.instance.dio.get('/rides/available',
+          queryParameters: params.isNotEmpty ? params : null);
       final rides = (response.data['rides'] as List)
           .map((r) => (r as Map).cast<String, dynamic>())
           .toList();
