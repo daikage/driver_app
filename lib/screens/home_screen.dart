@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 
 import 'package:glassmorphism/glassmorphism.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/ride_provider.dart';
@@ -15,6 +16,7 @@ import 'settings_screen.dart';
 import 'earnings_screen.dart';
 import 'chat_screen.dart';
 import 'history_screen.dart';
+import '../services/route_service.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -28,6 +30,9 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
   double _lat = 6.5244;
   double _lng = 3.3792;
   Timer? _timer;
+  
+  List<List<double>>? _currentRoute;
+  int? _lastRouteRideId;
 
   late AnimationController _animController;
 
@@ -166,6 +171,52 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
     }
   }
 
+  Future<void> _fetchRouteIfNeeded(Map<String, dynamic> ride) async {
+    final rideId = ride['id'] as int;
+    final status = ride['status'] as String;
+    
+    // If the ride is no longer active, clear route
+    if (['completed', 'cancelled'].contains(status)) {
+      if (_currentRoute != null && mounted) {
+        setState(() {
+          _currentRoute = null;
+          _lastRouteRideId = null;
+        });
+      }
+      return;
+    }
+
+    // Only fetch if we haven't fetched for this ride yet
+    if (_lastRouteRideId != rideId) {
+      final dropLatStr = ride['dropoff_lat']?.toString();
+      final dropLngStr = ride['dropoff_lng']?.toString();
+      final pickLatStr = ride['pickup_lat']?.toString();
+      final pickLngStr = ride['pickup_lng']?.toString();
+      
+      if (dropLatStr != null && dropLngStr != null) {
+        final dropLat = double.tryParse(dropLatStr);
+        final dropLng = double.tryParse(dropLngStr);
+        final pickLat = pickLatStr != null ? double.tryParse(pickLatStr) : null;
+        final pickLng = pickLngStr != null ? double.tryParse(pickLngStr) : null;
+
+        if (dropLat != null && dropLng != null) {
+          // If started, draw from current driver loc to dropoff.
+          // If accepted/arrived, draw from pickup to dropoff.
+          final startLat = (status == 'started') ? _lat : (pickLat ?? _lat);
+          final startLng = (status == 'started') ? _lng : (pickLng ?? _lng);
+
+          final route = await RouteService.getRouteCoordinates(startLat, startLng, dropLat, dropLng);
+          if (mounted) {
+            setState(() {
+              _currentRoute = route;
+              _lastRouteRideId = rideId;
+            });
+          }
+        }
+      }
+    }
+  }
+
   void _showRatingDialog(int rideId) {
     int stars = 5;
     final commentController = TextEditingController();
@@ -266,6 +317,25 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
     );
   }
 
+  Future<void> _navigateTo(double lat, double lng) async {
+    final url = Uri.parse('google.navigation:q=$lat,$lng');
+    final fallbackUrl = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+    
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open navigation app.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<RideState>(rideProvider, (previous, next) {
@@ -284,12 +354,31 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
     final status = ride?['status'] as String?;
     final available = rideState.availableRides;
     final filterType = rideState.serviceTypeFilter;
+    
+    // Fetch route if there's an active ride
+    if (ride != null) {
+      _fetchRouteIfNeeded(ride);
+    } else if (_currentRoute != null) {
+      // Clear route if no ride
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _currentRoute = null;
+            _lastRouteRideId = null;
+          });
+        }
+      });
+    }
 
     return Scaffold(
       body: Stack(
         children: [
           // ── Map ────────────────────────────────────────────────────
-          DynamicMapView(latitude: _lat, longitude: _lng),
+          DynamicMapView(
+            latitude: _lat, 
+            longitude: _lng,
+            routeCoordinates: _currentRoute,
+          ),
 
           // ── Top gradient overlay ──────────────────────────────────
           Positioned(
@@ -865,6 +954,30 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
                         if (status == 'started')
                           _buildActionButton('Complete', 'completed',
                               AppColors.success),
+                        if (status == 'accepted' || status == 'started')
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  if (status == 'accepted' && ride['pickup_lat'] != null) {
+                                    _navigateTo(double.parse(ride['pickup_lat'].toString()), double.parse(ride['pickup_lng'].toString()));
+                                  } else if (status == 'started' && ride['dropoff_lat'] != null) {
+                                    _navigateTo(double.parse(ride['dropoff_lat'].toString()), double.parse(ride['dropoff_lng'].toString()));
+                                  }
+                                },
+                                icon: const Icon(Icons.navigation_rounded, size: 16),
+                                label: const Text('Nav', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ),
+                          ),
                         if (status == 'accepted' ||
                             status == 'arrived' ||
                             status == 'started')
