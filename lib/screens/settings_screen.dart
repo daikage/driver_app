@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/map_provider.dart';
 import '../utils/app_theme.dart';
 import 'documents_screen.dart';
+import 'vehicles_screen.dart';
+import 'profile_edit_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -90,6 +92,103 @@ class SettingsScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: AppShadows.soft,
             ),
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.electricBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.assignment_ind_outlined,
+                        color: AppColors.electricBlue, size: 20),
+                  ),
+                  title: const Text(
+                    'Driver Documents (KYC)',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    'Upload your license and insurance',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  trailing: Icon(Icons.chevron_right_rounded,
+                      color: Colors.grey.shade400),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                    );
+                  },
+                ),
+                Divider(height: 1, indent: 20, endIndent: 20, color: Colors.grey.shade200),
+                ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.directions_car_outlined,
+                        color: AppColors.accent, size: 20),
+                  ),
+                  title: const Text(
+                    'My Vehicles',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    'Register and manage your vehicles',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  trailing: Icon(Icons.chevron_right_rounded,
+                      color: Colors.grey.shade400),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const VehiclesScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // ── Account Section ─────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 12),
+            child: Text(
+              'ACCOUNT',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade500,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.cardDark : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppShadows.soft,
+            ),
             child: ListTile(
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -98,18 +197,18 @@ class SettingsScreen extends ConsumerWidget {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.electricBlue.withOpacity(0.1),
+                  color: AppColors.primaryMid.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.assignment_ind_outlined,
-                    color: AppColors.electricBlue, size: 20),
+                child: const Icon(Icons.person_outline,
+                    color: AppColors.primaryMid, size: 20),
               ),
               title: const Text(
-                'Driver Documents (KYC)',
+                'Edit Profile',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
-                'Upload your license and insurance',
+                'Name, email, phone & password',
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade500,
@@ -120,7 +219,7 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                  MaterialPageRoute(builder: (_) => const ProfileEditScreen()),
                 );
               },
             ),

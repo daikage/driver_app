@@ -67,7 +67,7 @@ class RideNotifier extends StateNotifier<RideState> {
   }) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
-      final response = await ApiService.instance.dio.post('/rides/request', data: {
+      final response = await ApiService.instance.dio.post('/rides', data: {
         'pickup_lat': pickupLat,
         'pickup_lng': pickupLng,
         'pickup_address': pickupAddress,
