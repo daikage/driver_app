@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dio/dio.dart';
 import '../providers/vehicle_provider.dart';
 import '../utils/app_theme.dart';
 
