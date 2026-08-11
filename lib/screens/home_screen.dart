@@ -95,6 +95,10 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
         await notifier.updateLocation(ride['id'] as int, _lat, _lng);
       }
       await notifier.fetchActive();
+    } else if (status == 'cancelled') {
+      // The ride was cancelled (by the driver or the customer) – return to the
+      // available-rides view instead of staying stuck on a finished ride.
+      await notifier.fetchActive();
     } else if (status == null) {
       await notifier.fetchActive();
       await notifier.fetchAvailable(serviceType: rideState.serviceTypeFilter);
