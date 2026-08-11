@@ -400,6 +400,86 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
             ),
           ),
 
+          // ── Offline overlay ────────────────────────────────────────
+          if (!isOnline)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.6),
+                child: Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 32),
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: AppShadows.medium,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            color: AppColors.offline.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.power_settings_new_rounded,
+                            size: 36,
+                            color: AppColors.offline,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'You\'re Offline',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Go online to start receiving\nride requests',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.online,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: AppShadows.glow(AppColors.online),
+                          ),
+                          child: ElevatedButton(
+                            onPressed: _toggleOnline,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.all(16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: const Text(
+                              'Go Online',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
           // ── Top bar: Online toggle + actions ───────────────────────
           Positioned(
             top: 52,
@@ -490,86 +570,6 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
               ),
             ),
           ),
-
-          // ── Offline overlay ────────────────────────────────────────
-          if (!isOnline)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withOpacity(0.6),
-                child: Center(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 32),
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: AppShadows.medium,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: AppColors.offline.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.power_settings_new_rounded,
-                            size: 36,
-                            color: AppColors.offline,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'You\'re Offline',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Go online to start receiving\nride requests',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: AppGradients.online,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: AppShadows.glow(AppColors.online),
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _toggleOnline,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.all(16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: const Text(
-                              'Go Online',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w700, fontSize: 16),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
           // ── FABs: Chat & SOS (when ride active) ───────────────────
           if (isOnline && ride != null)

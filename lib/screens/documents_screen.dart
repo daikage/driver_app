@@ -72,11 +72,18 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
+        String errorMsg = 'Upload failed. Please try again.';
+        if (e is DioException && e.response?.data != null) {
+          final data = e.response!.data;
+          if (data is Map) {
+            errorMsg = data['error'] ?? data['message'] ?? data['detail'] ?? errorMsg;
+          }
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text(ApiService.friendlyError(e as Exception)),
+            content: Text(errorMsg),
             behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.error,
           ),
         );
       }
