@@ -229,10 +229,20 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                             plateNumber: plateC.text.trim(),
                           );
                       if (ctx.mounted) Navigator.pop(ctx);
-                    } catch (_) {
+                    } catch (e) {
                       if (ctx.mounted) {
+                        String errorMsg = 'Failed to add vehicle';
+                        if (e is DioException && e.response?.data != null) {
+                          final data = e.response!.data;
+                          if (data is Map) {
+                            errorMsg = data['error'] ?? data['message'] ?? data['detail'] ?? errorMsg;
+                          }
+                        }
                         ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(content: Text('Failed to add vehicle')),
+                          SnackBar(
+                            content: Text(errorMsg),
+                            backgroundColor: AppColors.error,
+                          ),
                         );
                       }
                     }
