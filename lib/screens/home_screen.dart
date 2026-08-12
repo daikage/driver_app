@@ -153,6 +153,25 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
     await ref.read(authProvider.notifier).logout();
   }
 
+  /// The customer's live position (shared by the customer app while on a ride),
+  /// so the driver can see them approaching / on the map.
+  MapPin? _customerPin(Map<String, dynamic> ride) {
+    final customer = ride['customer'];
+    if (customer is Map) {
+      final lat = double.tryParse(customer['last_lat']?.toString() ?? '');
+      final lng = double.tryParse(customer['last_lng']?.toString() ?? '');
+      if (lat != null && lng != null) {
+        return MapPin(
+          latitude: lat,
+          longitude: lng,
+          color: AppColors.success,
+          label: 'Customer',
+        );
+      }
+    }
+    return null;
+  }
+
   Future<void> _sendSos(int rideId) async {
     try {
       await ref.read(rideProvider.notifier).sendSos(rideId, _lat, _lng);
@@ -382,6 +401,37 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
             latitude: _lat, 
             longitude: _lng,
             routeCoordinates: _currentRoute,
+            pins: [
+              MapPin(
+                latitude: _lat,
+                longitude: _lng,
+                color: AppColors.electricBlue,
+                label: 'You',
+              ),
+              if (ride != null) ...[
+                MapPin(
+                  latitude:
+                      double.tryParse(ride['pickup_lat']?.toString() ?? '') ??
+                          _lat,
+                  longitude:
+                      double.tryParse(ride['pickup_lng']?.toString() ?? '') ??
+                          _lng,
+                  color: AppColors.warning,
+                  label: 'Pickup',
+                ),
+                MapPin(
+                  latitude:
+                      double.tryParse(ride['dropoff_lat']?.toString() ?? '') ??
+                          _lat,
+                  longitude:
+                      double.tryParse(ride['dropoff_lng']?.toString() ?? '') ??
+                          _lng,
+                  color: AppColors.interstate,
+                  label: 'Dropoff',
+                ),
+                if (_customerPin(ride) case final pin?) pin,
+              ],
+            ],
           ),
 
           // ── Top gradient overlay ──────────────────────────────────

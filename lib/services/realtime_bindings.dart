@@ -143,6 +143,10 @@ class _RealtimeBindingsState extends ConsumerState<RealtimeBindings> {
         rideNotifier.fetchActive();
         break;
 
+      case 'CustomerLocationUpdated':
+        _applyCustomerLocation(event.data);
+        break;
+
       case 'MessageSent':
         final message = event.data['message'];
         if (message is Map) {
@@ -150,5 +154,25 @@ class _RealtimeBindingsState extends ConsumerState<RealtimeBindings> {
         }
         break;
     }
+  }
+
+  void _applyCustomerLocation(Map<String, dynamic> data) {
+    final currentRide = ref.read(rideProvider).ride;
+    if (currentRide == null) return;
+
+    final rideId = data['rideId'];
+    final lat = data['lat'];
+    final lng = data['lng'];
+    if (rideId != currentRide['id'] || lat == null || lng == null) return;
+
+    final customer = (currentRide['customer'] as Map?)?.cast<String, dynamic>() ??
+        <String, dynamic>{};
+    customer['last_lat'] = lat;
+    customer['last_lng'] = lng;
+
+    ref.read(rideProvider.notifier).updateRideLocally({
+      ...currentRide,
+      'customer': customer,
+    });
   }
 }
