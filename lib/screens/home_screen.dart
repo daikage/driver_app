@@ -364,9 +364,13 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
     ref.listen<RideState>(rideProvider, (previous, next) {
       final prevStatus = previous?.ride?['status'];
       final nextStatus = next.ride?['status'];
-      if (prevStatus != 'completed' && nextStatus == 'completed') {
-        final rideId = next.ride!['id'];
-        _showRatingDialog(rideId);
+      
+      // If the ride was active and transitions to completed OR becomes null
+      if (prevStatus != null && ['accepted', 'arrived', 'started'].contains(prevStatus)) {
+        if (nextStatus == 'completed' || next.ride == null) {
+          final rideId = previous!.ride!['id'] as int;
+          _showRatingDialog(rideId);
+        }
       }
     });
 
@@ -790,16 +794,29 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen>
                                   ),
                                 ),
                                 const Spacer(),
-                                Text(
-                                  '₦${r['estimated_fare']}',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: stColor,
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        '₦${r['estimated_fare']}',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                          color: stColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        ((r['payment_method'] as String?) ?? 'cash').toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                             const SizedBox(height: 10),
                             Row(
                               children: [
